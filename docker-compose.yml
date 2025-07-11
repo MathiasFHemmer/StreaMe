@@ -1,0 +1,88 @@
+version: "3.9"
+
+services:
+  streame:
+    build:
+      context: ./api
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+    volumes:
+      - ./api/videos:/videos
+      - /D:/Lazer/Movies:/input
+    networks: [strea-me-net]
+
+  alloy:
+    image: grafana/alloy:latest
+    ports:
+      - 12345:12345
+      - 4000:4317
+      - 4001:4318
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    depends_on:
+      - loki
+      - mimir
+      - tempo
+    networks: [strea-me-net]
+
+  mimir:
+    image: grafana/mimir:2.10.3
+    command: -config.file=/etc/mimir/mimir.yml
+    volumes:
+      - ./mimir/mimir.yml:/etc/mimir/mimir.yml:ro
+      - ./mimir/runtime-config.yml:/etc/mimir/runtime-config.yml:ro
+      - mimir-data:/mimir-data
+    ports:
+      - "4003:9009"
+    networks: [strea-me-net]
+
+
+  loki:
+    image: grafana/loki:2.9.2
+    command: -config.file=/etc/loki/local-config.yml
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/local-config.yml:ro
+      - loki-data:/loki
+    ports:
+      - "4004:3100"
+    networks: [strea-me-net]
+
+  tempo:
+    image: grafana/tempo:latest
+    command: ["-config.file=/etc/tempo/tempo.yml"]
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"
+      - "4005:4317"
+      - "4006:4318"
+    networks: [strea-me-net]
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - mimir
+      - tempo
+      - loki
+    networks: [strea-me-net]
+
+volumes:
+  grafana-data:
+  mimir-data:
+  tempo-data:
+  loki-data:
+
+networks:
+  strea-me-net:
+    driver: bridge

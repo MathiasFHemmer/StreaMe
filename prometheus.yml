@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 20s
+
+scrape_configs:
+  - job_name: 'streame'
+    static_configs:
+      - targets: ['streame:5000']
