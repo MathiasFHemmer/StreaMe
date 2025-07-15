@@ -62,7 +62,9 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
     Authorization = [new HangfireAuthFilter()]
 });
 
-app.MapGet("/", ([FromServices] ActivitySource activitySource, [FromServices] ILogger<Program> logger) =>
+app.MapGet("/", (
+    [FromServices] ActivitySource activitySource,
+    [FromServices] ILogger<Program> logger) =>
 {
     using var activity = activitySource.StartActivity("EncodeVideo");
     logger.LogInformation("Testing");
