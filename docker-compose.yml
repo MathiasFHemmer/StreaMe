@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   streame:
     build:
@@ -10,7 +8,9 @@ services:
       - ASPNETCORE_URLS=http://+:5000
     volumes:
       - ./api/videos:/videos
-      - /C:/Movies:/input
+      - type: bind
+        source: C:\Movies
+        target: /input
     networks: [strea-me-net]
 
   alloy:
@@ -77,10 +77,32 @@ services:
       # - mimir
     networks: [strea-me-net]
 
+  # Use postgres/example user/password credentials
+
+  postgres:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: example
+    volumes:
+      - pg-data:/data/postgres
+      - ./postgres/init-db:/docker-entrypoint-initdb.d
+    networks: [strea-me-net]
+      
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 5001:8080
+    networks: [strea-me-net]
+
+
 volumes:
   grafana-data:
   loki-data:
   tempo-data:
+  pg-data:
   # mimir-data:
 
 networks:

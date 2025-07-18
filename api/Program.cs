@@ -1,66 +1,27 @@
 using Hangfire;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Trace;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 using System.Diagnostics;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddHangfire(c =>
-{
-    c.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UseInMemoryStorage();
-});
-
-builder.Services.AddHangfireServer();
-
 var serviceName = Assembly.GetEntryAssembly()?.GetName().Name ?? "unknown";
 var serviceVersion = "1.0.0";
 
-builder.Services.AddSingleton(new ActivitySource(serviceName));
+var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService(
-        serviceName: serviceName,
-        serviceVersion: serviceVersion))
-    .WithTracing(tracing => tracing
-        .AddSource(serviceName)
-        .AddAspNetCoreInstrumentation(          )
-        .AddOtlpExporter(otlpOptions =>
-        {
-            otlpOptions.Endpoint = new Uri("http://alloy:4317");
-        })
-        .AddConsoleExporter());
-    // .WithMetrics(metrics => metrics
-    //     .AddMeter(serviceName)
-    //     .AddAspNetCoreInstrumentation()
-    //     .AddPrometheusExporter()
-    //     .AddConsoleExporter());
+var config = builder.Configuration.Get<Configuration>()?
+    .BindRuntimeValues() ?? throw new Exception("Missing configuration file!"); 
 
-builder.Logging.AddOpenTelemetry(options => options
-    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(
-        serviceName: serviceName,
-        serviceVersion: serviceVersion))
-    .AddOtlpExporter(otlpOptions =>
-    {
-        otlpOptions.Endpoint = new Uri("http://alloy:4317");
-    })
-    .AddConsoleExporter());
+builder.SetupLogging(config)
+    .SetupHangfireService()
+    .SetupOtelServices(config)
+    ;
+    
+builder.Services
+    .AddTransient<VideoEncodingJob>()
+    .AddTransient<JobStateTracker>();
 
-builder.Services.AddTransient<VideoEncodingJob>();
-builder.Services.AddTransient<JobStateTracker>();
-
-var app = builder.Build();
-
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
-{
-    Authorization = [new HangfireAuthFilter()]
-});
+var app = builder.Build()
+    .SetupHangfireDashboard();
 
 app.MapGet("/", (
     [FromServices] ActivitySource activitySource,

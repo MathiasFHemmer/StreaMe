@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS Player with Fullscreen Quality Selector</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #222;
+        }
+
+        .player-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #000;
+        }
+
+        #video {
+            width: 100%;
+            display: block;
+        }
+
+        .custom-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 10;
+        }
+
+        /* Show controls by default in fullscreen */
+        :fullscreen .custom-controls,
+        :-webkit-full-screen .custom-controls,
+        :-moz-full-screen .custom-controls {
+            opacity: 1 !important;
+        }
+
+        .player-container:hover .custom-controls,
+        .player-container:focus-within .custom-controls,
+        .custom-controls.visible {
+            opacity: 1;
+        }
+
+        .player-container:hover .custom-controls,
+        .player-container:focus-within .custom-controls,
+        .custom-controls.visible {
+            opacity: 1;
+        }
+
+        /* Quality selector styling */
+        .quality-selector-container {
+            position: relative;
+            margin-right: 10px;
+        }
+
+        #quality-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #quality-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        #quality-selector {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 5px 0;
+            min-width: 120px;
+            display: none;
+            z-index: 20;
+        }
+
+        #quality-selector.show {
+            display: block;
+        }
+
+        #quality-selector button {
+            display: block;
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        #quality-selector button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Fullscreen-specific styles */
+        .player-container:-webkit-full-screen {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            background: #000;
+        }
+
+        .player-container:-webkit-full-screen #video {
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .player-container:-webkit-full-screen .custom-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        }
+
+        /* Other control buttons */
+        .control-button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 16px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        /* Progress bar */
+        .progress-container {
+            flex-grow: 1;
+            height: 5px;
+            background: rgba(255,255,255,0.2);
+            margin: 0 10px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background: #ff0000;
+            width: 0%;
+            position: relative;
+        }
+
+        /* Time display */
+        .time-display {
+            color: white;
+            font-size: 14px;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        /* Loading and error states */
+        .loading-spinner, .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: white;
+            background: rgba(255,0,0,0.7);
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            max-width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container" id="player-container">
+        <video id="video"></video>
+        
+        <!-- Custom controls -->
+        <div class="custom-controls">
+            <button class="control-button" id="play-button">▶</button>
+            
+            <div class="progress-container" id="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            
+            <div class="time-display">
+                <span id="current-time">0:00</span> / <span id="duration">0:00</span>
+            </div>
+            
+            <div class="quality-selector-container">
+                <button id="quality-button">Quality</button>
+                <div id="quality-selector">
+                    <button value="auto">Auto</button>
+                    <!-- Quality options will be added here -->
+                </div>
+            </div>
+            
+            <button class="control-button" id="fullscreen-button">⛶</button>
+        </div>
+        
+        <!-- Loading and error states -->
+        <div class="loading-spinner" id="spinner">
+            <div class="spinner"></div>
+        </div>
+        
+        <div class="error-message" id="error-message"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('video');
+            const playerContainer = document.getElementById('player-container');
+            const playButton = document.getElementById('play-button');
+            const fullscreenButton = document.getElementById('fullscreen-button');
+            const progressBar = document.getElementById('progress-bar');
+            const progressContainer = document.getElementById('progress-container');
+            const currentTimeDisplay = document.getElementById('current-time');
+            const durationDisplay = document.getElementById('duration');
+            const qualityButton = document.getElementById('quality-button');
+            const qualitySelector = document.getElementById('quality-selector');
+            const spinner = document.getElementById('spinner');
+            const errorDisplay = document.getElementById('error-message');
+            const customControls = document.querySelector('.custom-controls');
+            
+            let hls;
+            let isQualitySelectorOpen = false;
+            
+            // Toggle play/pause
+            playButton.addEventListener('click', togglePlay);
+            video.addEventListener('click', togglePlay);
+            
+            function togglePlay() {
+                if (video.paused) {
+                    video.play().then(() => {
+                        playButton.textContent = '❚❚';
+                    }).catch(e => {
+                        console.error('Playback failed:', e);
+                    });
+                } else {
+                    video.pause();
+                    playButton.textContent = '▶';
+                }
+            }
+            
+            // Fullscreen control
+            fullscreenButton.addEventListener('click', toggleFullscreen);
+            
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    playerContainer.requestFullscreen().catch(e => {
+                        console.error('Fullscreen error:', e);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+            
+            // Progress bar
+            video.addEventListener('timeupdate', updateProgress);
+            progressContainer.addEventListener('click', seek);
+            
+            function updateProgress() {
+                const percent = (video.currentTime / video.duration) * 100;
+                progressBar.style.width = `${percent}%`;
+                currentTimeDisplay.textContent = formatTime(video.currentTime);
+                
+                if (!isNaN(video.duration)) {
+                    durationDisplay.textContent = formatTime(video.duration);
+                }
+            }
+            
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                seconds = Math.floor(seconds % 60);
+                return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            }
+            
+            function seek(e) {
+                const percent = e.offsetX / progressContainer.offsetWidth;
+                video.currentTime = percent * video.duration;
+            }
+            
+            // Quality selector
+            qualityButton.addEventListener('click', toggleQualitySelector);
+            
+            function toggleQualitySelector(e) {
+                e.stopPropagation();
+                isQualitySelectorOpen = !isQualitySelectorOpen;
+                qualitySelector.classList.toggle('show', isQualitySelectorOpen);
+            }
+            
+            // Close quality selector when clicking elsewhere
+            document.addEventListener('click', function() {
+                if (isQualitySelectorOpen) {
+                    qualitySelector.classList.remove('show');
+                    isQualitySelectorOpen = false;
+                }
+            });
+            
+            // Initialize HLS
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    enableWorker: true,
+                    maxBufferLength: 30,
+                    maxMaxBufferLength: 600,
+                    maxBufferSize: 60 * 1000 * 1000,
+                    maxBufferHole: 0.5
+                });
+                
+                hls.loadSource('hls/thisisminecraft/master.m3u8');
+                hls.attachMedia(video);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function(event, data) {
+                    // Clear existing options except Auto
+                    while (qualitySelector.children.length > 1) {
+                        qualitySelector.removeChild(qualitySelector.lastChild);
+                    }
+                    
+                    // Add quality options
+                    data.levels.forEach((level, index) => {
+                        const button = document.createElement('button');
+                        button.value = index;
+                        button.textContent = `${level.height}p`;
+                        if (level.bitrate) {
+                            button.textContent += ` (${Math.round(level.bitrate / 1000)}kbps)`;
+                        }
+                        button.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            hls.currentLevel = parseInt(this.value);
+                            qualityButton.textContent = `${level.height}p`;
+                            qualitySelector.classList.remove('show');
+                            isQualitySelectorOpen = false;
+                        });
+                        qualitySelector.appendChild(button);
+                    });
+                    
+                    // Set initial quality to auto
+                    hls.currentLevel = -1;
+                    qualityButton.textContent = 'Auto';
+                    
+                    // Try to autoplay
+                    video.play().catch(e => {
+                        console.log('Autoplay prevented:', e);
+                    });
+                });
+                
+                // Show loading spinner during buffering
+                hls.on(Hls.Events.FRAG_LOADING, function() {
+                    spinner.style.display = 'block';
+                });
+                
+                hls.on(Hls.Events.FRAG_LOADED, function() {
+                    spinner.style.display = 'none';
+                });
+                
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    spinner.style.display = 'none';
+                    
+                    let errorMessage = '';
+                    if (data.fatal) {
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                errorMessage = `Network Error: ${data.details}`;
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                errorMessage = `Media Error: ${data.details}`;
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                errorMessage = `Fatal Error: ${data.details}`;
+                                hls.destroy();
+                                break;
+                        }
+                    } else {
+                        errorMessage = `Error: ${data.details}`;
+                    }
+                    
+                    errorDisplay.textContent = errorMessage;
+                    errorDisplay.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        errorDisplay.style.display = 'none';
+                    }, 5000);
+                });
+                
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // For Safari (native HLS support)
+                video.src = 'hls/thisisminecraft/master.m3u8';
+                qualityButton.style.display = 'none';
+                
+                video.addEventListener('error', function() {
+                    errorDisplay.textContent = 'Error loading video';
+                    errorDisplay.style.display = 'block';
+                });
+            } else {
+                errorDisplay.textContent = 'Your browser doesn\'t support HLS streaming';
+                errorDisplay.style.display = 'block';
+            }
+            
+            // Show controls when mouse moves
+            let controlsTimeout;
+            document.addEventListener('mousemove', function() {
+                customControls.classList.add('visible');
+                clearTimeout(controlsTimeout);
+                controlsTimeout = setTimeout(() => {
+                    if (!video.paused && !isQualitySelectorOpen) {
+                        customControls.classList.remove('visible');
+                    }
+                }, 3000);
+            });
+            
+            // Keep controls visible when quality selector is open
+            qualitySelector.addEventListener('mouseenter', function() {
+                clearTimeout(controlsTimeout);
+            });
+            
+            qualitySelector.addEventListener('mouseleave', function() {
+                if (!video.paused) {
+                    controlsTimeout = setTimeout(() => {
+                        customControls.classList.remove('visible');
+                    }, 1000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
