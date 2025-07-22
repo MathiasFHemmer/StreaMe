@@ -1,10 +1,8 @@
-using Hangfire;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
 using System.Diagnostics;
-
-var serviceName = Assembly.GetEntryAssembly()?.GetName().Name ?? "unknown";
-var serviceVersion = "1.0.0";
+using api.Modules.Admin.Services;
+using api.Modules.Admin.Requests;
+using api.Modules.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +16,8 @@ builder.SetupLogging(config)
     
 builder.Services
     .AddTransient<VideoEncodingJob>()
-    .AddTransient<JobStateTracker>();
+    .AddTransient<JobStateTracker>()
+    .AddTransient<VideoEncoderService>();
 
 var app = builder.Build()
     .SetupHangfireDashboard();
@@ -32,18 +31,30 @@ app.MapGet("/", (
     return "Hello World!";
 });
 app.MapPost("/encode", (
-    [FromBody] EncodeRequest request, 
-    [FromServices] VideoEncodingJob job, 
-    [FromServices] IBackgroundJobClient jobClient,
-    [FromServices] ILogger<Program> logger) =>
+    [FromBody] EnqueueEncodeVideoRequest request,
+    [FromServices] VideoEncoderService service) =>
 {
-    logger.LogInformation("Enqueueing encoding job for path: {Path}", request.Path);
-    
-    var jobId = jobClient.Enqueue(() => job.Run(request.Path));
-    
-    logger.LogInformation("Job {JobId} enqueued", jobId);
-    
-    return Results.Ok($"Job {jobId} enqueued!");
+    var result = service.EnqueueEncodeVideo(request);
+    return result switch
+    {
+        { IsSuccess: true } => Results.Ok($"Job {result.Value} enqueued!"),
+        { Error.Code: Errors.Code error } when error == Errors.Code.PathNotFound => Results.BadRequest(result.Error.Value.Formatted),
+        { Error.Code: Errors.Code error } when error == Errors.Code.VideoPathEmpty => Results.NotFound(result.Error.Value.Formatted),
+        { Error: var error } => Results.InternalServerError(error?.Formatted)
+    };
+});
+
+app.MapPost("/remove/{jobId}", (
+    string jobId,
+    [FromServices] VideoEncoderService service) =>
+{
+    var result = service.RemoveEnqueuedVideo(jobId);
+    return result switch
+    {
+        { IsSuccess: true } => Results.Ok($"Job {jobId} removed!"),
+        { Error.Code: Errors.Code error} when error == Errors.Code.JobIdNotFound => Results.NotFound(result.Error.Value.Formatted),
+        { Error: var error } => Results.InternalServerError(error?.Formatted)
+    };
 });
 
 app.Run();
