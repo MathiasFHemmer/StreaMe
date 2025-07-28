@@ -26,6 +26,7 @@ public readonly record struct Result(ErrorResult? Error, bool isSuccess)
     public bool IsSuccess => isSuccess;
 
     public static Result Success() => new(default, true);
+    public static Result<TValue> Success<TValue>(TValue value) => new(value, default, true);
     public static Result Failure(ErrorResult? error) => new(error, false);
     public static Result Failure<ErrorType>(
         string message,

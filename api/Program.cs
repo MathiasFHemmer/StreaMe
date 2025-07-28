@@ -3,6 +3,9 @@ using System.Diagnostics;
 using api.Modules.Admin.Services;
 using api.Modules.Admin.Requests;
 using api.Modules.Admin;
+using api.Core.Repository;
+using api.Core.UnitOfWork;
+using api.Modules.Movies.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,8 +16,11 @@ builder.SetupLogging(config)
     .SetupHangfireService()
     .SetupOtelServices(config)
     ;
-    
+
 builder.Services
+    .AddSingleton<IDbConnectionFactory, DbConnectionFactory>()
+    .AddTransient<IUnitOfWorkFactory, UnitOfWorkFactory>()
+    .AddTransient<IMovieRepository, MovieRepository>()
     .AddTransient<VideoEncodingJob>()
     .AddTransient<JobStateTracker>()
     .AddTransient<VideoEncoderService>();
@@ -30,11 +36,11 @@ app.MapGet("/", (
     logger.LogInformation("Testing");
     return "Hello World!";
 });
-app.MapPost("/encode", (
+app.MapPost("/encode", async (
     [FromBody] EnqueueEncodeVideoRequest request,
     [FromServices] VideoEncoderService service) =>
 {
-    var result = service.EnqueueEncodeVideo(request);
+    var result = await service.EnqueueEncodeVideo(request);
     return result switch
     {
         { IsSuccess: true } => Results.Ok($"Job {result.Value} enqueued!"),

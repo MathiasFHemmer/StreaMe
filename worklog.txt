@@ -1,0 +1,23 @@
+25/07/25
+Transactions boundaries are harder to code then what I expected, but that is alright. I think I got a good minimal, and working, implementation
+of unit of work pattern, an abstraction layer above the Dapper lib that I'll use as DAL.
+
+My intended architecture is as follow:
+1. The Services will define transactions boundaries, where it can specify what operation must be atomic, and what can be ignored.
+2. Repositories will encapsulate data access and queries, where they will request for transactions boundaries context from services and execute on those.
+3. Dapper will wrap my database calls and provide easier to write object mappings.
+
+[] Get some movie metadata on the database
+
+24/07/25
+I keep on struggling on what kind of pattern do I want to use on the data layer. Entity Framework is a solid choice, but I wanted to be more data oriented.
+Dapper sounds like the perfect choice here, but I'm not sure on how exactly I want to code my abstraction layer.
+
+[X] Define a data access layer architecture
+--- Moved to 25/07/25 [] Get some movie metadata on the database
+
+
+23/07/25
+
+[X] Work on the video metadata database
+[X] Setup initial tables on postgres

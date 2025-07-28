@@ -1,26 +1,38 @@
 using api.Core.Result;
+using api.Core.UnitOfWork;
 using api.Modules.Admin.Requests;
+using api.Modules.Movies.Repository;
+using Dapper;
 using Hangfire;
 
 namespace api.Modules.Admin.Services;
 
 public class VideoEncoderService
 {
+    private readonly IUnitOfWorkFactory unitOfWorkFactory;
+    private readonly IMovieRepository movieRepository;
     private readonly IBackgroundJobClient backgroundJobClient;
     private readonly VideoEncodingJob videoEncodingJob;
     private readonly ILogger<VideoEncoderService> logger;
 
-    public VideoEncoderService(IBackgroundJobClient backgroundJobClient, VideoEncodingJob videoEncodingJob, ILogger<VideoEncoderService> logger)
+    public VideoEncoderService(
+        IBackgroundJobClient backgroundJobClient,
+        VideoEncodingJob videoEncodingJob,
+        ILogger<VideoEncoderService> logger,
+        IUnitOfWorkFactory unitOfWorkFactory,
+        IMovieRepository movieRepository)
     {
         this.backgroundJobClient = backgroundJobClient;
         this.videoEncodingJob = videoEncodingJob;
         this.logger = logger;
+        this.unitOfWorkFactory = unitOfWorkFactory;
+        this.movieRepository = movieRepository;
     }
 
-    public Result<string> EnqueueEncodeVideo(EnqueueEncodeVideoRequest request)
+    public async Task<Result<string>> EnqueueEncodeVideo(EnqueueEncodeVideoRequest request)
     {
         var valResult = request.IsValid();
-        if (valResult.IsFailure)
+        if (valResult.IsFailure && false)
         {
             logger.LogError(valResult.Error!.Value.Formatted);
             return valResult.ToFailedResultOf<string>();
@@ -28,8 +40,12 @@ public class VideoEncoderService
 
         try
         {
-            var jobId = backgroundJobClient.Enqueue(() => videoEncodingJob.Run(request.VideoPath));
-            return Result<string>.Success(jobId);
+            using (unitOfWorkFactory.Create())
+            {
+                var movie = await movieRepository.InsertNew("A New Movie", default);                
+            }
+            //var jobId = backgroundJobClient.Enqueue(() => videoEncodingJob.Run(request.VideoPath));
+            return Result<string>.Success("1");
         }
         catch (Exception ex)
         {

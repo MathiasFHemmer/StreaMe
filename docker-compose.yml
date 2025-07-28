@@ -84,7 +84,8 @@ services:
     restart: always
     shm_size: 128mb
     environment:
-      POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: ${PG_DEFAULT_PASSWORD}  
+      STREAME_API_PASSWORD: ${PG_API_PASSWORD}
     volumes:
       - pg-data:/data/postgres
       - ./postgres/init-db:/docker-entrypoint-initdb.d
