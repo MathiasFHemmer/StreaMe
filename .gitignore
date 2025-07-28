@@ -56,3 +56,6 @@ nunit-*.xml
 # api
 /api/videos/
 /api/videos/*
+/api/videos/
+*.ts
+*.m3u8
