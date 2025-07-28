@@ -1,3 +1,12 @@
+28/07/25
+I have landed on something I'm more comfortable working with, using Dapper and Postgres. Now I just have to get the workflow as I want, but for that I have to create some kind of 
+abstraction around using files. I have a FileProvider that I want to work on, something that will be capable of giving me a stream of data that I can work with.  I'll mostly use files
+from my own disk, but in case I want to move it to use some other storage engine, I just have to create another type of this instance. I'm still not sure on how will I handle the file
+input, I think that will be another session of code-thinking. For now I'll probably just have the FileProvider handle this for me:
+FileProvider
+- Provide access to local non tracked movies
+- Provide CRUD operations for HLS videos
+
 25/07/25
 Transactions boundaries are harder to code then what I expected, but that is alright. I think I got a good minimal, and working, implementation
 of unit of work pattern, an abstraction layer above the Dapper lib that I'll use as DAL.
@@ -7,7 +16,7 @@ My intended architecture is as follow:
 2. Repositories will encapsulate data access and queries, where they will request for transactions boundaries context from services and execute on those.
 3. Dapper will wrap my database calls and provide easier to write object mappings.
 
-[] Get some movie metadata on the database
+[X] Get some movie metadata on the database
 
 24/07/25
 I keep on struggling on what kind of pattern do I want to use on the data layer. Entity Framework is a solid choice, but I wanted to be more data oriented.
@@ -15,7 +24,6 @@ Dapper sounds like the perfect choice here, but I'm not sure on how exactly I wa
 
 [X] Define a data access layer architecture
 --- Moved to 25/07/25 [] Get some movie metadata on the database
-
 
 23/07/25
 

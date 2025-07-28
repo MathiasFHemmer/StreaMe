@@ -2,7 +2,6 @@ using api.Core.Result;
 using api.Core.UnitOfWork;
 using api.Modules.Admin.Requests;
 using api.Modules.Movies.Repository;
-using Dapper;
 using Hangfire;
 
 namespace api.Modules.Admin.Services;

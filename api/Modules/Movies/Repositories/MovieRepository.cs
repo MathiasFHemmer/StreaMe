@@ -4,25 +4,6 @@ using Dapper;
 
 namespace api.Modules.Movies.Repository;
 
-public class Movie {
-    public Guid Id { get; set; }
-    public string Title { get; set; }
-}
-
-public class MovieMetadata
-{
-    public Guid Id { get; set; }
-    public Guid MovieId { get; set; }
-    public MovieStatus Status { get; set; }
-}
-
-public enum MovieStatus
-{
-    Ok,
-    Processing,
-    Error,
-}
-
 public interface IMovieRepository
 {
     Task<Result<Movie>> InsertNew(string title, CancellationToken ct);
@@ -60,7 +41,6 @@ public sealed class MovieRepository : IMovieRepository
             MovieId = movie.Id,
             Status = MovieStatus.Processing
         };
-
 
         try
         {
