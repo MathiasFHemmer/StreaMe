@@ -10,6 +10,7 @@ CREATE TABLE movie_metadata (
     file_name VARCHAR(255) NOT NULL,
     file_location TEXT NOT NULL,
     movie_id UUID REFERENCES movies(id),
+    hangfire_job_id VARCHAR(255) NOT NULL,
     status SMALLINT NOT NULL 
         CHECK (status IN (1, 2, 3)),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

@@ -1,11 +1,14 @@
-namespace api.Modules.Movies.Repository;
+namespace api.Core.Entities;
 
-public class Movie
+public class Movie : Entity
 {
-    public Guid Id { get; set; }
     public string Title { get; set; }
     public int ReleaseYear { get; set; }
     public string Description { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public Movie(string title, int releaseYear, string description)
+    {
+        Title = title;
+        ReleaseYear = releaseYear;
+        Description = description;
+    }
 }

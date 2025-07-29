@@ -10,10 +10,10 @@ using api.Modules.Movies.Repository;
 var builder = WebApplication.CreateBuilder(args);
 
 var config = builder.Configuration.Get<Configuration>()?
-    .BindRuntimeValues() ?? throw new Exception("Missing configuration file!"); 
+    .BindRuntimeValues() ?? throw new Exception("Missing configuration file!");
 
 builder.SetupLogging(config)
-    .SetupHangfireService()
+    .SetupHangfireService(config)
     .SetupOtelServices(config)
     ;
 
@@ -38,9 +38,9 @@ app.MapGet("/", (
 });
 app.MapPost("/encode", async (
     [FromBody] EnqueueEncodeVideoRequest request,
-    [FromServices] VideoEncoderService service) =>
+    [FromServices] VideoEncoderService service, CancellationToken ct) =>
 {
-    var result = await service.EnqueueEncodeVideo(request);
+    var result = await service.EnqueueEncodeVideo(request, ct);
     return result switch
     {
         { IsSuccess: true } => Results.Ok($"Job {result.Value} enqueued!"),

@@ -1,13 +1,17 @@
-namespace api.Modules.Movies.Repository;
+namespace api.Core.Entities;
 
-public class MovieMetadata
+public class MovieMetadata : Entity
 {
-    public Guid Id { get; set; }
     public Guid MovieId { get; set; }
     public MovieStatus Status { get; set; }
     public int LengthMinutes { get; set; }
     public string FileName { get; set; }
     public string FileLocation { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public string HangfireJobId { get; set; }
+    public MovieMetadata(Guid movieId, string hangfireJobId, MovieStatus status = MovieStatus.Processing)
+    {
+        MovieId = movieId;
+        Status = status;
+        HangfireJobId = hangfireJobId;
+    }
 }

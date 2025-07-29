@@ -1,4 +1,4 @@
-namespace api.Modules.Movies.Repository;
+namespace api.Core.Entities;
 
 public enum MovieStatus
 {

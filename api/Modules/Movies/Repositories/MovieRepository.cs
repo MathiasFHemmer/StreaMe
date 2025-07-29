@@ -1,3 +1,4 @@
+using api.Core.Entities;
 using api.Core.Result;
 using api.Core.UnitOfWork;
 using Dapper;
@@ -6,7 +7,7 @@ namespace api.Modules.Movies.Repository;
 
 public interface IMovieRepository
 {
-    Task<Result<Movie>> InsertNew(string title, CancellationToken ct);
+    Task<Result<Movie>> InsertNew(string title, string description, int releaseYear, string path, string hangfireJobId, CancellationToken ct);
 }
 
 public sealed class MovieRepository : IMovieRepository
@@ -27,19 +28,14 @@ public sealed class MovieRepository : IMovieRepository
         this.logger = logger;
     }
 
-    public async Task<Result<Movie>> InsertNew(string title, CancellationToken ct)
+    public async Task<Result<Movie>> InsertNew(string title, string description, int releaseYear, string path, string hangfireJobId, CancellationToken ct)
     {
-        var movie = new Movie
+        var movie = new Movie(title, releaseYear, description);
+        var movieMetadata = new MovieMetadata(movie.Id, hangfireJobId)
         {
-            Id = Guid.CreateVersion7(),
-            Title = title,
-        };
-
-        var movieMetadata = new MovieMetadata
-        {
-            Id = Guid.CreateVersion7(),
-            MovieId = movie.Id,
-            Status = MovieStatus.Processing
+            LengthMinutes = 0,
+            FileName = title, 
+            FileLocation = path 
         };
 
         try
@@ -47,14 +43,14 @@ public sealed class MovieRepository : IMovieRepository
             if (AmbientUnitOfWorkLocator.Get(out var uow))
             {
                 var insertMovie = new CommandDefinition(
-                    commandText: "INSERT INTO movies (id, title) VALUES (@Id, @Title)",
+                    commandText: "INSERT INTO movies (id, title, release_year, description) VALUES (@Id, @Title, @Release)",
                     parameters: movie,
                     transaction: uow.Transaction,
                     cancellationToken: ct
                 );
 
                 var insertMovieMetadata = new CommandDefinition(
-                    commandText: "INSERT INTO movie_metadata (id, movie_id, status) VALUES (@Id, @MovieId, @Status)",
+                    commandText: "INSERT INTO movie_metadata (id, movie_id, status, length_minutes, file_name, file_location, hangfire_job_id) VALUES (@Id, @MovieId, @Status, @LengthMinutes, @FileName, FileLocation, HangfireJobId)",
                     parameters: movieMetadata,
                     transaction: uow.Transaction,
                     cancellationToken: ct

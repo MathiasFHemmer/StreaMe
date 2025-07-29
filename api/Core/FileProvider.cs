@@ -11,6 +11,4 @@ public class FileProvider
         this.configuration = configuration;
         this.logger = logger;
     }
-
-    public async Task 
 }

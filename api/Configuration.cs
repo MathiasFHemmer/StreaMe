@@ -6,6 +6,14 @@ public sealed class Configuration
 
     public string ServiceVersion { get; set; }
     public string AlloyUri { get; set; } = "http://alloy:4317";
+    public string MoviesInputPath { get; set; }
+    public string MovieStoragePath { get; set; }
+    public ConnectionStrings ConnectionStrings { get; set; } = new();
+}
+
+public sealed class ConnectionStrings
+{
+    public string ApiDb { get; set; }
 }
 
 public static class ConfigurationExtensions

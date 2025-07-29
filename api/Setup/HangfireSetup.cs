@@ -1,18 +1,21 @@
 using Hangfire;
+using Hangfire.PostgreSql;
 using OpenTelemetry.Trace;
 
 public static class HangfireSetup
 {
     const string HangfireUrl = "/hangfire";
 
-    public static WebApplicationBuilder SetupHangfireService(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder SetupHangfireService(this WebApplicationBuilder builder, Configuration appConfig)
     {
+        var connectionString = appConfig.ConnectionStrings.ApiDb;
+
         builder.Services.AddHangfire(config =>
         {
             config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
-                .UseInMemoryStorage();
+                .UsePostgreSqlStorage(c =>  c.UseNpgsqlConnection(connectionString));
         });
 
         builder.Services.AddHangfireServer();
