@@ -7,6 +7,12 @@ FileProvider
 - Provide access to local non tracked movies
 - Provide CRUD operations for HLS videos
 
+TODO:
+Rethink the Result Pattern for error propagation. Maybe static typed errors are not so good after all? Converging error codes is tricky, and making sure _just enough log_ is present is 
+also a challenge.
+
+I still have to create some kind of mechanism where I can clean up the files that got generated, in case of any errors. 
+
 25/07/25
 Transactions boundaries are harder to code then what I expected, but that is alright. I think I got a good minimal, and working, implementation
 of unit of work pattern, an abstraction layer above the Dapper lib that I'll use as DAL.

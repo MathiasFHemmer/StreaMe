@@ -49,7 +49,7 @@ public class VideoEncoderService
                 var jobId = backgroundJobClient.Enqueue(() => videoEncodingJob.Run(inputPath, outputPath, request.Name));
                 var movie = await movieRepository.InsertNew(request.Name, request.Description, request.ReleaseYear, outputPath, jobId, ct);
                 if (movie.IsFailure)
-                    return Result<string>.Failure(Errors.Generic(movie.Error!.Value.Formatted));
+                    return Result<string>.Failure(Errors.Generic(request));
 
                 return Result<string>.Success(movie.Value!.Id.ToString());
             }

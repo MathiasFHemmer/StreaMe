@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using Hangfire;
 using OpenTelemetry.Trace;
 
 public class JobStateTracker
@@ -11,6 +12,7 @@ public class JobStateTracker
     public void Decrement() => Interlocked.Decrement(ref _active);
 }
 
+[AutomaticRetry(Attempts = 0)]
 public class VideoEncodingJob
 {
     public ActivitySource ActivitySource { get; }
@@ -26,7 +28,7 @@ public class VideoEncodingJob
     {
         using var activity = ActivitySource.StartActivity("FFmpeg HLS Job");
         _tracker.Increment();
-    
+
         try
         {
             string outputDir = Path.Combine(outputFolder, Path.GetFileNameWithoutExtension(name));
@@ -84,7 +86,7 @@ public class VideoEncodingJob
             }
 
             activity?.SetStatus(ActivityStatusCode.Ok);
-            }
+        }
         catch (Exception ex)
         {
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
