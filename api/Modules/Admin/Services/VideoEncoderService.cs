@@ -44,7 +44,7 @@ public class VideoEncoderService
         {
             using (unitOfWorkFactory.Create())
             {
-                var inputPath = configuration.GetValue<string>(nameof(Configuration.MoviesInputPath))!;
+                var inputPath = Path.Combine(configuration.GetValue<string>(nameof(Configuration.MoviesInputPath))!, request.Path);
                 var outputPath = configuration.GetValue<string>(nameof(Configuration.MovieStoragePath))!;
                 var jobId = backgroundJobClient.Enqueue(() => videoEncodingJob.Run(inputPath, outputPath, request.Name));
                 var movie = await movieRepository.InsertNew(request.Name, request.Description, request.ReleaseYear, outputPath, jobId, ct);

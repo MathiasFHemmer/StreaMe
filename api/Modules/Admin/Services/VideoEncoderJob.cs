@@ -29,10 +29,11 @@ public class VideoEncodingJob
     
         try
         {
-            string outputDir = Path.Combine(outputFolder, name);
+            string outputDir = Path.Combine(outputFolder, Path.GetFileNameWithoutExtension(name));
+            string fullInputPath = Path.Combine(inputPath, name);
             Directory.CreateDirectory(outputDir);
 
-            var args = $"-y -i \"{inputPath}\" " +
+            var args = $"-y -i \"{fullInputPath}\" " +
                 // Video streams
                 "-filter_complex \" " +
                 "[0:v]split=4[v1][v2][v3][v4]; " +

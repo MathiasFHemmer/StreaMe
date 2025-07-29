@@ -33,7 +33,7 @@ public sealed class MovieRepository : IMovieRepository
         var movie = new Movie(title, releaseYear, description);
         var movieMetadata = new MovieMetadata(movie.Id, hangfireJobId)
         {
-            LengthMinutes = 0,
+            LengthMinutes = 1,
             FileName = title, 
             FileLocation = path 
         };
@@ -43,14 +43,14 @@ public sealed class MovieRepository : IMovieRepository
             if (AmbientUnitOfWorkLocator.Get(out var uow))
             {
                 var insertMovie = new CommandDefinition(
-                    commandText: "INSERT INTO movies (id, title, release_year, description) VALUES (@Id, @Title, @Release)",
+                    commandText: "INSERT INTO movies (id, title, release_year, description) VALUES (@Id, @Title, @ReleaseYear, @Description)",
                     parameters: movie,
                     transaction: uow.Transaction,
                     cancellationToken: ct
                 );
 
                 var insertMovieMetadata = new CommandDefinition(
-                    commandText: "INSERT INTO movie_metadata (id, movie_id, status, length_minutes, file_name, file_location, hangfire_job_id) VALUES (@Id, @MovieId, @Status, @LengthMinutes, @FileName, FileLocation, HangfireJobId)",
+                    commandText: "INSERT INTO movie_metadata (id, movie_id, status, length_minutes, file_name, file_location, hangfire_job_id) VALUES (@Id, @MovieId, @Status, @LengthMinutes, @FileName, @FileLocation, @HangfireJobId)",
                     parameters: movieMetadata,
                     transaction: uow.Transaction,
                     cancellationToken: ct
