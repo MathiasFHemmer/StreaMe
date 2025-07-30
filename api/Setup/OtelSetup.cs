@@ -1,5 +1,6 @@
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+namespace api.Setup;
 
 public static class OtelSetup
 {

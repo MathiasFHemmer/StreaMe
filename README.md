@@ -34,4 +34,10 @@ Logs by itself are useful for gathering information about your application. Trac
 
 OTEL traces are composed of "spans", a collection of data that has a defined start and end timestamp. Spans also can be nested, or be adjacent to each other, much like a <div> html structure. This ensures a relationship between information flow, and allows users to visualize what is going on through time in the application.
 
-Spans also can be linked to Logs, or can emit "Span Events". While logs can contain rich information with a lot of metadata associated to it, Span Events help developers to see marked occurrences. For example, in a multi step process, a Span can show when it starts and ends, a Span Event can mark the beginning and end of each step, and Logs can contain information on what exactly was done and what parameters where used. Think of span events as markers that will indicate specific points in time inside a Span.  
+Spans also can be linked to Logs, or can emit "Span Events". While logs can contain rich information with a lot of metadata associated to it, Span Events help developers to see marked occurrences. For example, in a multi step process, a Span can show when it starts and ends, a Span Event can mark the beginning and end of each step, and Logs can contain information on what exactly was done and what parameters where used. Think of span events as markers that will indicate specific points in time inside a Span.
+
+## What is this
+
+- localhost:5000 -> Base api access
+- localhost:5001 -> Grafana telemetry explorer
+- localhost:5002 -> Adminer db explorer

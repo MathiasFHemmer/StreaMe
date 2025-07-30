@@ -1,3 +1,15 @@
+29/07/25
+I'm still struggling with my Error implementation. Whenever I try to think of a use case, the error abstraction does not suffices my needs.
+
+A simple error class with a string code and a string message works well, but does not handle cases where multiple errors must be returned,  so I need to think of it in a new
+direction. Maybe I'm over engineering this solution again. I have to sit down and think of the end product, and start to do some compromises in scalability vs operability.
+
+After thinking for a while I decided to use the same approach as hangfire
+1. There will be a API module where the process will bootstrap itself, adding routes, configuring services and other.
+2. There will be a APP module where the api will serve a static page for browsing the api.
+
+
+
 28/07/25
 I have landed on something I'm more comfortable working with, using Dapper and Postgres. Now I just have to get the workflow as I want, but for that I have to create some kind of 
 abstraction around using files. I have a FileProvider that I want to work on, something that will be capable of giving me a stream of data that I can work with.  I'll mostly use files

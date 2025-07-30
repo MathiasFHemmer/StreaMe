@@ -2,6 +2,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using OpenTelemetry.Trace;
 
+namespace api.Setup;
 public static class HangfireSetup
 {
     const string HangfireUrl = "/hangfire";
@@ -15,7 +16,7 @@ public static class HangfireSetup
             config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
-                .UsePostgreSqlStorage(c =>  c.UseNpgsqlConnection(connectionString));
+                .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(connectionString));
         });
 
         builder.Services.AddHangfireServer();

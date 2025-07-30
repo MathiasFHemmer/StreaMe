@@ -17,10 +17,10 @@ services:
 
   alloy:
     image: grafana/alloy:latest
-    ports:
-      - 12345:12345
-      - 4317:4317 #gRPC OTLP
-      - 4318:4318 #HTTP OTLP
+    # ports:
+    #   - 12345:12345
+    #   - 4317:4317 #gRPC OTLP
+    #   - 4318:4318 #HTTP OTLP
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -39,20 +39,21 @@ services:
     volumes:
       - ./loki/loki-config.yml:/etc/loki/local-config.yml:ro
       - loki-data:/loki
-    ports:
-      - "4004:3100"
+    # ports:
+    #   - "4004:3100"
     networks: [strea-me-net]
 
   tempo:
     image: grafana/tempo:latest
-    command: ["-config.file=/etc/tempo/tempo.yml"]
+    command: ["-config.file=/etc/tempo/tempo.yml", "target=all"]
     volumes:
       - ./tempo/tempo.yml:/etc/tempo/tempo.yml:ro
       - tempo-data:/var/tempo
-    ports:
-      - "3200:3200" #Tempo HTTP Query port
-      - "4010:4010" #Tempo gRPC Ingest port
-      - "4011:4011" #Tempo HTTP Ingest port
+
+    # ports:
+    #   - "3200:3200" #Tempo HTTP Query port
+    #   - "4010:4010" #Tempo gRPC Ingest port
+    #   - "4011:4011" #Tempo HTTP Ingest port
     networks: [strea-me-net]
 
   # mimir:
@@ -69,7 +70,7 @@ services:
   grafana:
     image: grafana/grafana
     ports:
-      - "3000:3000"
+      - "5001:3000"
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -92,12 +93,14 @@ services:
       - pg-data:/data/postgres
       - ./postgres/init-db:/docker-entrypoint-initdb.d
     networks: [strea-me-net]
+    ports:
+      - 5432:5432
       
   adminer:
     image: adminer
     restart: always
     ports:
-      - 5001:8080
+      - 5002:8080
     networks: [strea-me-net]
 
 

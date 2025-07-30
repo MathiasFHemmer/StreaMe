@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
+namespace api.Setup;
 
 public static class LoggingSetup
 {

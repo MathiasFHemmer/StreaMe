@@ -5,22 +5,9 @@ using Dapper;
 
 namespace api.Modules.Movies.Repository;
 
-public interface IMovieRepository
-{
-    Task<Result<Movie>> InsertNew(string title, string description, int releaseYear, string path, string hangfireJobId, CancellationToken ct);
-}
-
 public sealed class MovieRepository : IMovieRepository
 {
-    static class Errors
-    {
-        public enum Code
-        {
-            Generic
-        }
-        public static ErrorResult Generic(object data)
-            => ErrorResult.New(Code.Generic, "Something went wrong! Data: {0}", data);
-    }
+
     private readonly ILogger<MovieRepository> logger;
 
     public MovieRepository(ILogger<MovieRepository> logger)
@@ -28,14 +15,14 @@ public sealed class MovieRepository : IMovieRepository
         this.logger = logger;
     }
 
-    public async Task<Result<Movie>> InsertNew(string title, string description, int releaseYear, string path, string hangfireJobId, CancellationToken ct)
+    public async Task<Result<Movie, Error>> InsertNew(string title, string description, int releaseYear, string path, string hangfireJobId, CancellationToken ct)
     {
         var movie = new Movie(title, releaseYear, description);
         var movieMetadata = new MovieMetadata(movie.Id, hangfireJobId)
         {
             LengthMinutes = 1,
-            FileName = title, 
-            FileLocation = path 
+            FileName = title,
+            FileLocation = path
         };
 
         try
@@ -58,13 +45,13 @@ public sealed class MovieRepository : IMovieRepository
                 await uow.Connection.ExecuteAsync(insertMovie);
                 await uow.Connection.ExecuteAsync(insertMovieMetadata);
             }
-            logger.LogInformation("New Movie {id} added successfully", movie.Id);
-            return Result.Success(movie);
+            logger.LogInformation("New Movie {id} added successfully. Movie Metadata added with it: {metaId}", movie.Id, movieMetadata.Id);
+            return Result<Movie, Error>.Success(movie);
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Unable to insert new Movie on database");
-            return Result<Movie>.Failure(Errors.Generic(e));
+            logger.LogError(e, "MovieRepository.InsertNew");
+            return Result<Movie, Error>.Failure(new Error("MovieRepository.InsertNew", "An exception occurred while inserting the movie into the database", null));
         }
     }
 }
