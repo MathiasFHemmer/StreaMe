@@ -1,11 +1,12 @@
 services:
   streame:
     build:
-      context: ./api
+      context: ./StreaMe
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
     environment:
-      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_URLS=https://+:5000
     volumes:
       - /d/Lazer/Movies:/input/movies
     depends_on:
@@ -33,7 +34,7 @@ services:
     networks: [strea-me-net]
 
   loki:
-    image: grafana/loki:2.9.2
+    image: grafana/loki:3.5.3
     command: -config.file=/etc/loki/local-config.yml
     user: root
     volumes:

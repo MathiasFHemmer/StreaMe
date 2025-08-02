@@ -59,3 +59,4 @@ nunit-*.xml
 /api/videos/
 *.ts
 *.m3u8
+*.pfx
