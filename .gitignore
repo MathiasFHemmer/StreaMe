@@ -54,9 +54,7 @@ TestResult.xml
 nunit-*.xml
 
 # api
-/api/videos/
-/api/videos/*
-/api/videos/
+/streame/Api/src/wwwroot/*
 *.ts
 *.m3u8
 *.pfx

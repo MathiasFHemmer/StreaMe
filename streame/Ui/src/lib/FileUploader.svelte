@@ -1,29 +1,42 @@
 <script lang="ts">
-  async function handleFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
+  let{ input,onFileSelected,onUploadStart,onUploadProgress,onUploadComplete,onUploadError} = $props();
+
+  async function handleFileChange() {
     const file = input.files?.[0];
     if (!file) return;
 
-    try {
-      const response = await fetch('/upload', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/octet-stream',
-          'X-Filename': encodeURIComponent(file.name)
-        },
-        body: file.stream(),
-        duplex: 'half'
-      });
+    onFileSelected?.(file);
 
-      if (response.ok) {
-        console.log('Upload complete');
-      } else {
-        console.error('Upload failed:', await response.text());
-      }
+    try {
+      onUploadStart?.(file);
+      const xhr = new XMLHttpRequest();      
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          onUploadProgress?.(percent);
+        }
+      };
+
+    await new Promise<void>((resolve, reject) => {
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          onUploadComplete?.();
+          resolve();
+        } else {
+          reject(new Error(xhr.statusText));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Upload failed'));
+      
+      xhr.open('POST', '/upload', true);
+      xhr.setRequestHeader('X-Filename', encodeURIComponent(file.name));
+      xhr.send(file);
+    });
+
     } catch (err) {
-      console.error('Upload error:', err);
+      onUploadError?.(err as Error);
     }
   }
 </script>
 
-<input type="file" on:change={handleFileSelected} />
+<input type="file" bind:this={input} on:change={handleFileChange} />
