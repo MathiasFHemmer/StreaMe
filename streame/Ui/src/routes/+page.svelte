@@ -5,6 +5,7 @@
   let title = '';
   let description = '';
   let releaseYear = '';
+  let submitError = '';
   
   // File upload state
   let fileName = '';
@@ -36,7 +37,7 @@
     alert('Upload failed: ' + error.message);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!uploadComplete) return;
     
     const formData = {
@@ -46,8 +47,31 @@
       fileName
     };
     
-    console.log('Form submitted:', formData);
-    alert('Form submitted successfully!');
+    try {
+      const response = await fetch('/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: fileName, // Using the uploaded filename as title
+          path: '',     // Using the form's title field as path
+          description,
+          releaseYear: Number(releaseYear)
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      const result = await response.json();
+      console.log('Submission successful:', result);
+      alert('Media added successfully!');
+    } catch (error) {
+      console.error('Submission failed:', error);
+      submitError = 'Failed to add media: ' + (error as Error).message;
+    }
     
     // Reset form
     title = '';
@@ -60,6 +84,10 @@
 
 <div class="form-container">
   <h2>Media Upload Form</h2>
+
+  {#if submitError}
+    <div class="error-message">{submitError}</div>
+  {/if}
   
   <div class="form-group">
     <label for="title">Title</label>

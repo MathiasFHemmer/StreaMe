@@ -18,7 +18,7 @@ public static class MovieManagerRoutes
     {
         var result = await service.AddMovie(request, ct);
         if (result.IsFailure(out var addMovieError))
-            logger.LogError("Failed to add movie: {Error}", addMovieError);
+            logger.LogError("Failed to add movie: {Error}", addMovieError.ToString());
 
         return result.ToAPIResult();
     }

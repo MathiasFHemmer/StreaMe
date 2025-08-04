@@ -1,5 +1,6 @@
 <script lang="ts">
-  let{ input,onFileSelected,onUploadStart,onUploadProgress,onUploadComplete,onUploadError} = $props();
+  let{onFileSelected,onUploadStart,onUploadProgress,onUploadComplete,onUploadError} = $props();
+  let input: HTMLInputElement;
 
   async function handleFileChange() {
     const file = input.files?.[0];
